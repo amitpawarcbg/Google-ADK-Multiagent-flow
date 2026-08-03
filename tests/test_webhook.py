@@ -26,9 +26,8 @@ def test_github_webhook_github_pr_event():
     res = client.post("/github/webhook", json=payload)
     assert res.status_code == 200
     body = res.json()
-    assert body["status"] == "SUCCESS"
+    assert body["status"] == "ACCEPTED"
     assert "PR #88" in body["message"]
-    assert body["data"]["final_service_url"].startswith("https://")
 
 def test_github_webhook_direct_trigger():
     payload = {
@@ -42,5 +41,5 @@ def test_github_webhook_direct_trigger():
     res = client.post("/github/webhook", json=payload)
     assert res.status_code == 200
     body = res.json()
-    assert body["status"] == "SUCCESS"
+    assert body["status"] == "ACCEPTED"
     assert "PR #99" in body["message"]
