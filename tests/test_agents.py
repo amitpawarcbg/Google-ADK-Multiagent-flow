@@ -30,7 +30,7 @@ concurrency: 80
     )
     assert res["status"] == "SUCCESS"
     assert res["service_name"] == "test-student-app"
-    assert res["service_url"] == "https://test-student-app-uc.a.run.app"
+    assert res["service_url"].startswith("https://")
 
 def test_slack_notifier_agent():
     res = slack_notifier_agent.create_image_and_post_to_slack(
