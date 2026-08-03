@@ -15,7 +15,22 @@ output "webhook_service_url" {
 
 output "deployment_manager_agent_url" {
   description = "Live Cloud Run URL for deployment-manager-agent"
-  value       = google_cloud_run_v2_service.deployment_manager_agent_service.uri
+  value       = google_cloud_run_v2_service.deployment_manager_agent.uri
+}
+
+output "image_builder_sub_agent_url" {
+  description = "Live Cloud Run URL for image-builder-sub-agent"
+  value       = google_cloud_run_v2_service.image_builder_sub_agent.uri
+}
+
+output "cloud_run_deployer_sub_agent_url" {
+  description = "Live Cloud Run URL for cloud-run-deployer-sub-agent"
+  value       = google_cloud_run_v2_service.cloud_run_deployer_sub_agent.uri
+}
+
+output "slack_notifier_sub_agent_url" {
+  description = "Live Cloud Run URL for image-creator-slack-notifier-sub-agent"
+  value       = google_cloud_run_v2_service.slack_notifier_sub_agent.uri
 }
 
 output "service_account_email" {

@@ -60,9 +60,136 @@ resource "google_storage_bucket_iam_member" "public_read" {
   member = "allUsers"
 }
 
-# 4. Deploy Webhook Handler & Agent Services to Cloud Run
+# 4. Deploy All 4 Agent Container Services + Webhook Handler to Cloud Run
 
-# Webhook Service
+# Service 1: deployment-manager-agent (Orchestrator)
+resource "google_cloud_run_v2_service" "deployment_manager_agent" {
+  name     = "deployment-manager-agent"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    service_account = google_service_account.adk_agent_sa.email
+
+    containers {
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.gar_repository_name}/deployment-manager-agent:latest"
+
+      env {
+        name  = "GCP_PROJECT_ID"
+        value = var.project_id
+      }
+      env {
+        name  = "GCP_REGION"
+        value = var.region
+      }
+      env {
+        name  = "IMAGE_BUILDER_URL"
+        value = google_cloud_run_v2_service.image_builder_sub_agent.uri
+      }
+      env {
+        name  = "CLOUD_RUN_DEPLOYER_URL"
+        value = google_cloud_run_v2_service.cloud_run_deployer_sub_agent.uri
+      }
+      env {
+        name  = "SLACK_NOTIFIER_URL"
+        value = google_cloud_run_v2_service.slack_notifier_sub_agent.uri
+      }
+
+      resources {
+        limits = {
+          cpu    = "1000m"
+          memory = "512Mi"
+        }
+      }
+    }
+  }
+}
+
+# Service 2: image-builder-sub-agent
+resource "google_cloud_run_v2_service" "image_builder_sub_agent" {
+  name     = "image-builder-sub-agent"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    service_account = google_service_account.adk_agent_sa.email
+
+    containers {
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.gar_repository_name}/image-builder-sub-agent:latest"
+
+      env {
+        name  = "GCP_PROJECT_ID"
+        value = var.project_id
+      }
+      env {
+        name  = "GCP_REGION"
+        value = var.region
+      }
+      env {
+        name  = "GAR_REPOSITORY"
+        value = var.gar_repository_name
+      }
+    }
+  }
+}
+
+# Service 3: cloud-run-deployer-sub-agent
+resource "google_cloud_run_v2_service" "cloud_run_deployer_sub_agent" {
+  name     = "cloud-run-deployer-sub-agent"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    service_account = google_service_account.adk_agent_sa.email
+
+    containers {
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.gar_repository_name}/cloud-run-deployer-sub-agent:latest"
+
+      env {
+        name  = "GCP_PROJECT_ID"
+        value = var.project_id
+      }
+      env {
+        name  = "GCP_REGION"
+        value = var.region
+      }
+    }
+  }
+}
+
+# Service 4: image-creator-slack-notifier-sub-agent
+resource "google_cloud_run_v2_service" "slack_notifier_sub_agent" {
+  name     = "image-creator-slack-notifier-sub-agent"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    service_account = google_service_account.adk_agent_sa.email
+
+    containers {
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.gar_repository_name}/image-creator-slack-notifier-sub-agent:latest"
+
+      env {
+        name  = "GCP_PROJECT_ID"
+        value = var.project_id
+      }
+      env {
+        name  = "GCP_REGION"
+        value = var.region
+      }
+      env {
+        name  = "GCS_BUCKET_NAME"
+        value = var.gcs_bucket_name
+      }
+      env {
+        name  = "SLACK_WEBHOOK_URL"
+        value = var.slack_webhook_url
+      }
+    }
+  }
+}
+
+# Webhook Handler Service
 resource "google_cloud_run_v2_service" "webhook_service" {
   name     = "github-webhook-service"
   location = var.region
@@ -83,57 +210,26 @@ resource "google_cloud_run_v2_service" "webhook_service" {
         value = var.region
       }
       env {
-        name  = "GAR_REPOSITORY"
-        value = var.gar_repository_name
-      }
-      env {
-        name  = "GCS_BUCKET_NAME"
-        value = var.gcs_bucket_name
-      }
-      env {
-        name  = "SLACK_WEBHOOK_URL"
-        value = var.slack_webhook_url
-      }
-
-      resources {
-        limits = {
-          cpu    = "1000m"
-          memory = "512Mi"
-        }
+        name  = "ORCHESTRATOR_AGENT_URL"
+        value = google_cloud_run_v2_service.deployment_manager_agent.uri
       }
     }
   }
 }
 
-# Unauthenticated IAM Access for GitHub Webhook Service
-resource "google_cloud_run_v2_service_iam_member" "webhook_public_access" {
+# IAM Public Access policies for agent Cloud Run services
+resource "google_cloud_run_v2_service_iam_member" "agents_public_access" {
+  for_each = toset([
+    google_cloud_run_v2_service.deployment_manager_agent.name,
+    google_cloud_run_v2_service.image_builder_sub_agent.name,
+    google_cloud_run_v2_service.cloud_run_deployer_sub_agent.name,
+    google_cloud_run_v2_service.slack_notifier_sub_agent.name,
+    google_cloud_run_v2_service.webhook_service.name,
+  ])
+
   project  = var.project_id
   location = var.region
-  name     = google_cloud_run_v2_service.webhook_service.name
+  name     = each.key
   role     = "roles/run.invoker"
   member   = "allUsers"
-}
-
-# Agents Deployment: Orchestrator Agent Service
-resource "google_cloud_run_v2_service" "deployment_manager_agent_service" {
-  name     = "deployment-manager-agent"
-  location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
-
-  template {
-    service_account = google_service_account.adk_agent_sa.email
-
-    containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.gar_repository_name}/deployment-manager-agent:latest"
-
-      env {
-        name  = "GCP_PROJECT_ID"
-        value = var.project_id
-      }
-      env {
-        name  = "GCP_REGION"
-        value = var.region
-      }
-    }
-  }
 }
