@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, status, BackgroundTasks
 from webhook.schemas import DirectTriggerPayload, GitHubWebhookPayload, PipelineResponse
 from agents.deployment_manager import deployment_manager_agent
 
@@ -13,15 +13,22 @@ app = FastAPI(
 def health_check():
     return {"status": "healthy", "service": "github-webhook-handler"}
 
-@app.post("/github/webhook", response_model=PipelineResponse, status_code=status.HTTP_200_OK)
-async def github_webhook_handler(request: Request):
+def run_orchestrator_pipeline(extracted_context: dict):
+    """
+    Background worker executing the full multi-agent pipeline asynchronously.
+    """
+    deployment_manager_agent.prepare_deploy_context(extracted_context)
+
+@app.post("/github/webhook", status_code=status.HTTP_200_OK)
+async def github_webhook_handler(request: Request, background_tasks: BackgroundTasks):
     """
     Captures GitHub Pull Request webhook events (or direct triggers),
-    extracts metadata ({repo, pr_id, branch, commit, date, time}), and forwards to deployment-manager-agent.
+    extracts metadata ({repo, pr_id, branch, commit, date, time}),
+    responds immediately to GitHub (preventing webhook timeout),
+    and triggers deployment-manager-agent in background.
     """
     raw_payload = await request.json()
     
-    # Extract metadata flexibly (supporting GitHub webhook structure or direct payload)
     now = datetime.now()
     date_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H:%M:%S")
@@ -49,14 +56,14 @@ async def github_webhook_handler(request: Request):
         "time": time_str
     }
 
-    # Pass payload to Orchestrator Agent (deployment-manager-agent)
-    result = deployment_manager_agent.prepare_deploy_context(extracted_context)
+    # Dispatch to background task to prevent GitHub Webhook 10s timeout
+    background_tasks.add_task(run_orchestrator_pipeline, extracted_context)
 
-    return PipelineResponse(
-        status="SUCCESS",
-        message=f"Deployment pipeline executed successfully for PR #{pr_id} on {repo}.",
-        data=result
-    )
+    return {
+        "status": "ACCEPTED",
+        "message": f"Orchestrator pipeline triggered in background for PR #{pr_id} on {repo}.",
+        "context": extracted_context
+    }
 
 if __name__ == "__main__":
     import uvicorn
