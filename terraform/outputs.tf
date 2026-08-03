@@ -1,0 +1,24 @@
+output "artifact_registry_url" {
+  description = "Google Artifact Registry Docker repository URL"
+  value       = "${var.region}-docker.pkg.dev/${var.project_id}/${var.gar_repository_name}"
+}
+
+output "gcs_bucket_name" {
+  description = "GCS bucket name for status PNG badges"
+  value       = google_storage_bucket.artifacts_bucket.name
+}
+
+output "webhook_service_url" {
+  description = "Live Cloud Run URL for GitHub Webhook Endpoint"
+  value       = google_cloud_run_v2_service.webhook_service.uri
+}
+
+output "deployment_manager_agent_url" {
+  description = "Live Cloud Run URL for deployment-manager-agent"
+  value       = google_cloud_run_v2_service.deployment_manager_agent_service.uri
+}
+
+output "service_account_email" {
+  description = "ADK Multi-Agent Service Account Email"
+  value       = google_service_account.adk_agent_sa.email
+}
