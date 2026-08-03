@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 # In-memory student storage
@@ -18,6 +18,7 @@ class StudentCreate(BaseModel):
     email: str
     course: str
     roll_no: str
+    city: str
 
 class StudentResponse(BaseModel):
     id: str
@@ -25,6 +26,7 @@ class StudentResponse(BaseModel):
     email: str
     course: str
     roll_no: str
+    city: str
 
 @app.get("/health")
 def health_check():
@@ -38,7 +40,8 @@ def register_student(student: StudentCreate):
         "name": student.name,
         "email": student.email,
         "course": student.course,
-        "roll_no": student.roll_no
+        "roll_no": student.roll_no,
+        "city": student.city
     }
     db[student_id] = record
     return record
@@ -149,6 +152,9 @@ def home():
                 <label for="email">Email Address</label>
                 <input type="email" id="email" required placeholder="john@example.com">
 
+                <label for="city">City</label>
+                <input type="text" id="city" required placeholder="Pune / San Francisco">
+
                 <label for="course">Course</label>
                 <select id="course">
                     <option value="Cloud Native Architecture">Cloud Native Architecture</option>
@@ -178,7 +184,7 @@ def home():
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#94a3b8;">Roll No: ${s.roll_no} | Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#94a3b8;">Roll No: ${s.roll_no} | City: ${s.city} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
@@ -189,12 +195,13 @@ def home():
                 const roll_no = document.getElementById('roll_no').value;
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
+                const city = document.getElementById('city').value;
                 const course = document.getElementById('course').value;
                 
                 await fetch('/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({roll_no, name, email, course})
+                    body: JSON.stringify({roll_no, name, email, city, course})
                 });
                 e.target.reset();
                 fetchStudents();
