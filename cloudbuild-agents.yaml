@@ -15,8 +15,13 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/image-creator-slack-notifier-sub-agent:latest', '-f', 'Dockerfile.slack-notifier', '.']
 
+  # 5. Build github-webhook-service image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/github-webhook-service:latest', '-f', 'Dockerfile', '.']
+
 images:
   - 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/deployment-manager-agent:latest'
   - 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/image-builder-sub-agent:latest'
   - 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/cloud-run-deployer-sub-agent:latest'
   - 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/image-creator-slack-notifier-sub-agent:latest'
+  - 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/github-webhook-service:latest'
