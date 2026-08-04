@@ -15,7 +15,7 @@ class ImageBuilderSubAgent(BaseADKAgent):
         super().__init__(
             name="image-builder-sub-agent",
             role="Container Build & Registry Specialist",
-            instructions="Target container build for Google Artifact Registry (GAR). Format image tags cleanly."
+            instructions="Target container build for Google Artifact Registry (GAR). Format image tags cleanly in lowercase."
         )
 
     def build_and_push_image(self, repo: str, branch: str, tag: str) -> Dict[str, Any]:
@@ -29,9 +29,9 @@ class ImageBuilderSubAgent(BaseADKAgent):
         reasoning = self.generate_agent_reasoning(f"Prepare GAR build for {repo} on branch {branch} with tag {tag}")
         logger.info(f"[{self.name}] Agent Reasoning: {reasoning}")
 
-        repo_basename = repo.split("/")[-1]
+        # Docker repository names MUST be lowercased
+        repo_basename = repo.split("/")[-1].lower()
         image_repo_path = f"{settings.gcp_region}-docker.pkg.dev/{settings.gcp_project_id}/{settings.gar_repository}/{repo_basename}"
-        full_image_tag = f"{image_repo_path}:{tag}"
         latest_image_tag = f"{image_repo_path}:latest"
 
         # Build execution wrapper (gcloud builds submit app directory)
