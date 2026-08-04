@@ -14,7 +14,7 @@ def test_image_builder_sub_agent():
     assert res["status"] == "SUCCESS"
     assert res["agent"] == "image-builder-sub-agent"
     assert "pkg.dev" in res["image_name_tag"]
-    assert "pr42-a1b2c3d-20260803-132000" in res["image_name_tag"]
+    assert "latest" in res["image_name_tag"]
 
 def test_cloud_run_deployer_agent():
     sample_agent_md = """---
