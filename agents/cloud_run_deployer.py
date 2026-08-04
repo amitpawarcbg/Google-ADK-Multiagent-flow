@@ -46,7 +46,7 @@ class CloudRunDeployerSubAgent(BaseADKAgent):
         Executes real live deployment to GCP Cloud Run based on Agent.md specs.
         Returns payload containing live service_url.
         """
-        logger.info(f"[{self.name}] Initiating live Cloud Run deployment for commit {commit}")
+        logger.info(f"[{self.name}] Initiating live Cloud Run deployment for commit {commit} with image {image}")
         
         specs = self.parse_agent_md(agent_md_content)
         service_name = specs.get("service_name", "student-registration-app")
@@ -56,14 +56,14 @@ class CloudRunDeployerSubAgent(BaseADKAgent):
         env_vars = specs.get("env_vars", {})
 
         reasoning = self.generate_agent_reasoning(
-            f"Execute live deployment of Cloud Run service {service_name} with source app, CPU={cpu}, Memory={memory}, Concurrency={concurrency}"
+            f"Execute live deployment of Cloud Run service {service_name} with image {image}, CPU={cpu}, Memory={memory}, Concurrency={concurrency}"
         )
         logger.info(f"[{self.name}] Agent Reasoning: {reasoning}")
 
         env_vars_str = ",".join([f"{k}={v}" for k, v in env_vars.items()])
         deploy_cmd = (
             f"gcloud run deploy {service_name} "
-            f"--source app "
+            f"--image {image} "
             f"--region {settings.gcp_region} "
             f"--platform managed "
             f"--allow-unauthenticated "
@@ -84,7 +84,8 @@ class CloudRunDeployerSubAgent(BaseADKAgent):
                 text=True,
                 timeout=300
             )
-            logger.info(f"[{self.name}] Command output: {cmd_result.stdout.strip()}")
+            logger.info(f"[{self.name}] Command output stdout: {cmd_result.stdout.strip()}")
+            logger.info(f"[{self.name}] Command output stderr: {cmd_result.stderr.strip()}")
             if cmd_result.returncode == 0 and cmd_result.stdout.strip():
                 service_url = cmd_result.stdout.strip()
             else:
