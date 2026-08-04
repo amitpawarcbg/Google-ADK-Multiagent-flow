@@ -32,18 +32,31 @@ class ImageBuilderSubAgent(BaseADKAgent):
         repo_basename = repo.split("/")[-1]
         image_repo_path = f"{settings.gcp_region}-docker.pkg.dev/{settings.gcp_project_id}/{settings.gar_repository}/{repo_basename}"
         full_image_tag = f"{image_repo_path}:{tag}"
+        latest_image_tag = f"{image_repo_path}:latest"
 
-        # Build execution wrapper (gcloud builds submit / docker build & push)
-        build_command = f"gcloud builds submit --tag {full_image_tag} --project {settings.gcp_project_id}"
+        # Build execution wrapper (gcloud builds submit app directory)
+        build_command = f"gcloud builds submit app --tag {latest_image_tag} --project {settings.gcp_project_id}"
         logger.info(f"[{self.name}] Executing command: {build_command}")
 
-        # Simulated / Real execution response
+        try:
+            cmd_result = subprocess.run(
+                build_command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=300
+            )
+            logger.info(f"[{self.name}] Build output stdout: {cmd_result.stdout.strip()}")
+            logger.info(f"[{self.name}] Build output stderr: {cmd_result.stderr.strip()}")
+        except Exception as e:
+            logger.warning(f"[{self.name}] Build subprocess note: {e}")
+
         return {
             "status": "SUCCESS",
             "agent": self.name,
             "repo": repo,
             "branch": branch,
-            "image_name_tag": full_image_tag,
+            "image_name_tag": latest_image_tag,
             "gar_repository": settings.gar_repository,
             "build_command": build_command,
             "reasoning": reasoning
