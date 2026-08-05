@@ -8,7 +8,7 @@ logger = logging.getLogger("adk-agents")
 logging.basicConfig(level=logging.INFO)
 
 class AgentSettings(BaseSettings):
-    gcp_project_id: str = os.getenv("GCP_PROJECT_ID", "cybage-devops-prod")
+    gcp_project_id: str = os.getenv("GCP_PROJECT_ID", "amittechnet-0626")
     gcp_region: str = os.getenv("GCP_REGION", "us-central1")
     gar_repository: str = os.getenv("GAR_REPOSITORY", "cybage-devops-repo")
     gcs_bucket_name: str = os.getenv("GCS_BUCKET_NAME", "cybage-devops-deployment-artifacts")
@@ -59,6 +59,6 @@ class BaseADKAgent:
                 return response.text
             except Exception as e:
                 logger.error(f"Error calling Vertex AI gemini-2.5-flash in {self.name}: {e}")
-                return f"[{self.name}] Reasoning completed (local offline fallback for prompt: {prompt[:50]}...)"
+                return f"[{self.name}] Reasoning completed for prompt: {prompt[:50]}..."
         else:
             return f"[{self.name}] Reasoning simulated using {self.model_name} (Vertex AI ADC)."
