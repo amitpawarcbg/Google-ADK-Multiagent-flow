@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="1.8.0"
+    version="1.9.0"
 )
 
 # In-memory student storage
@@ -19,6 +19,7 @@ class StudentCreate(BaseModel):
     course: str
     city: str
     roll_no: str
+    country: str
 
 class StudentResponse(BaseModel):
     id: str
@@ -27,6 +28,7 @@ class StudentResponse(BaseModel):
     course: str
     city: str
     roll_no: str
+    country: str
 
 @app.get("/health")
 def health_check():
@@ -41,7 +43,8 @@ def register_student(student: StudentCreate):
         "email": student.email,
         "course": student.course,
         "city": student.city,
-        "roll_no": student.roll_no
+        "roll_no": student.roll_no,
+        "country": student.country
     }
     db[student_id] = record
     return record
@@ -155,6 +158,9 @@ def home():
                 <label for="city">City</label>
                 <input type="text" id="city" required placeholder="Pune / San Francisco">
 
+                <label for="country">Country</label>
+                <input type="text" id="country" required placeholder="India / USA">
+
                 <label for="course">Course</label>
                 <select id="course">
                     <option value="Cloud Native Architecture">Cloud Native Architecture</option>
@@ -184,7 +190,7 @@ def home():
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#94a3b8;">Roll No: ${s.roll_no} | City: ${s.city} | Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#94a3b8;">Roll No: ${s.roll_no} | City: ${s.city}, ${s.country} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
@@ -196,12 +202,13 @@ def home():
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
                 const city = document.getElementById('city').value;
+                const country = document.getElementById('country').value;
                 const course = document.getElementById('course').value;
                 
                 await fetch('/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({roll_no, name, email, city, course})
+                    body: JSON.stringify({roll_no, name, email, city, country, course})
                 });
                 e.target.reset();
                 fetchStudents();
