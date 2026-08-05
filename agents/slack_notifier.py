@@ -1,6 +1,7 @@
 import os
 import logging
 import httpx
+import subprocess
 from typing import Dict, Any
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
@@ -13,13 +14,13 @@ class ImageCreatorSlackNotifierSubAgent(BaseADKAgent):
     Sub-Agent 3: image-creator-slack-notifier-sub-agent
     Responsibility: Accepts repo, pr_id, commit, image, and service_url.
     Dynamically renders a status image (PNG) displaying deployment details, uploads PNG to GCS,
-    and posts notification to Slack via Webhook or Slack MCP server.
+    and posts notification to Slack via Webhook.
     """
     def __init__(self):
         super().__init__(
             name="image-creator-slack-notifier-sub-agent",
             role="Status Image Renderer & Slack Notification Specialist",
-            instructions="Render deployment status image PNG, save artifact, and dispatch notification payload to Slack."
+            instructions="Render deployment status image PNG, save artifact to GCS, and dispatch notification payload to Slack."
         )
 
     def render_status_image(self, repo: str, pr_id: int, commit: str, service_url: str, output_path: str) -> str:
@@ -63,6 +64,25 @@ class ImageCreatorSlackNotifierSubAgent(BaseADKAgent):
         img.save(output_path)
         logger.info(f"[{self.name}] Generated status image PNG at {output_path}")
         return output_path
+
+    def upload_to_gcs(self, local_file_path: str, filename: str) -> str:
+        """
+        Uploads generated PNG artifact card to Google Cloud Storage.
+        """
+        try:
+            from google.cloud import storage
+            client = storage.Client(project=settings.gcp_project_id)
+            bucket = client.bucket(settings.gcs_bucket_name)
+            blob = bucket.blob(filename)
+            blob.upload_from_filename(local_file_path, content_type="image/png")
+            logger.info(f"[{self.name}] Successfully uploaded {filename} via SDK to GCS bucket {settings.gcs_bucket_name}")
+        except Exception as e:
+            logger.warning(f"[{self.name}] GCS SDK upload note: {e}. Running gcloud storage cp fallback.")
+            cmd = f"gcloud storage cp {local_file_path} gs://{settings.gcs_bucket_name}/{filename} --project {settings.gcp_project_id}"
+            res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            logger.info(f"[{self.name}] gcloud storage cp output: {res.stdout.strip()}")
+
+        return f"https://storage.googleapis.com/{settings.gcs_bucket_name}/{filename}"
 
     def post_to_slack(self, repo: str, pr_id: int, commit: str, service_url: str, gcs_png_url: str) -> bool:
         """
@@ -111,8 +131,7 @@ class ImageCreatorSlackNotifierSubAgent(BaseADKAgent):
         local_png_path = os.path.join("scratch", filename)
 
         self.render_status_image(repo, pr_id, commit, service_url, local_png_path)
-
-        gcs_png_url = f"https://storage.googleapis.com/{settings.gcs_bucket_name}/{filename}"
+        gcs_png_url = self.upload_to_gcs(local_png_path, filename)
         slack_status = self.post_to_slack(repo, pr_id, commit, service_url, gcs_png_url)
 
         return {
