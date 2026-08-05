@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="2.0.0"
+    version="2.1.0"
 )
 
 # In-memory student storage
@@ -17,12 +17,14 @@ class StudentCreate(BaseModel):
     name: str
     email: str
     course: str
+    city: str
 
 class StudentResponse(BaseModel):
     id: str
     name: str
     email: str
     course: str
+    city: str
 
 @app.get("/health")
 def health_check():
@@ -35,7 +37,8 @@ def register_student(student: StudentCreate):
         "id": student_id,
         "name": student.name,
         "email": student.email,
-        "course": student.course
+        "course": student.course,
+        "city": student.city
     }
     db[student_id] = record
     return record
@@ -143,6 +146,9 @@ def home():
                 <label for="email">Email Address</label>
                 <input type="email" id="email" required placeholder="john@example.com">
 
+                <label for="city">City</label>
+                <input type="text" id="city" required placeholder="Pune / San Francisco">
+
                 <label for="course">Course</label>
                 <select id="course">
                     <option value="Cloud Native Architecture">Cloud Native Architecture</option>
@@ -172,7 +178,7 @@ def home():
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#94a3b8;">Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#94a3b8;">City: ${s.city} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
@@ -182,12 +188,13 @@ def home():
                 e.preventDefault();
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
+                const city = document.getElementById('city').value;
                 const course = document.getElementById('course').value;
                 
                 await fetch('/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name, email, course})
+                    body: JSON.stringify({name, email, city, course})
                 });
                 e.target.reset();
                 fetchStudents();
