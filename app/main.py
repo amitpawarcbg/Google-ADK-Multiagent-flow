@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="2.2.0"
+    version="2.3.0"
 )
 
 # In-memory student storage
@@ -19,6 +19,7 @@ class StudentCreate(BaseModel):
     course: str
     city: str
     gender: str
+    country: str
 
 class StudentResponse(BaseModel):
     id: str
@@ -27,6 +28,7 @@ class StudentResponse(BaseModel):
     course: str
     city: str
     gender: str
+    country: str
 
 @app.get("/health")
 def health_check():
@@ -41,7 +43,8 @@ def register_student(student: StudentCreate):
         "email": student.email,
         "course": student.course,
         "city": student.city,
-        "gender": student.gender
+        "gender": student.gender,
+        "country": student.country
     }
     db[student_id] = record
     return record
@@ -160,6 +163,9 @@ def home():
                 <label for="city">City</label>
                 <input type="text" id="city" required placeholder="Pune / San Francisco">
 
+                <label for="country">Country</label>
+                <input type="text" id="country" required placeholder="India / USA">
+
                 <label for="course">Course</label>
                 <select id="course">
                     <option value="Cloud Native Architecture">Cloud Native Architecture</option>
@@ -189,7 +195,7 @@ def home():
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#94a3b8;">Gender: ${s.gender} | City: ${s.city} | Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#94a3b8;">Gender: ${s.gender} | City: ${s.city}, ${s.country} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
@@ -201,12 +207,13 @@ def home():
                 const email = document.getElementById('email').value;
                 const gender = document.getElementById('gender').value;
                 const city = document.getElementById('city').value;
+                const country = document.getElementById('country').value;
                 const course = document.getElementById('course').value;
                 
                 await fetch('/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name, email, gender, city, course})
+                    body: JSON.stringify({name, email, gender, city, country, course})
                 });
                 e.target.reset();
                 fetchStudents();
