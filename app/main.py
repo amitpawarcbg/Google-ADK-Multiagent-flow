@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="2.4.0"
+    version="2.5.0"
 )
 
 # In-memory student storage
@@ -20,6 +20,7 @@ class StudentCreate(BaseModel):
     city: str
     gender: str
     country: str
+    roll_no: str
 
 class StudentResponse(BaseModel):
     id: str
@@ -29,6 +30,7 @@ class StudentResponse(BaseModel):
     city: str
     gender: str
     country: str
+    roll_no: str
 
 @app.get("/health")
 def health_check():
@@ -44,7 +46,8 @@ def register_student(student: StudentCreate):
         "course": student.course,
         "city": student.city,
         "gender": student.gender,
-        "country": student.country
+        "country": student.country,
+        "roll_no": student.roll_no
     }
     db[student_id] = record
     return record
@@ -77,13 +80,13 @@ def home():
         <title>Cybage DevOps - Student Registration Portal</title>
         <style>
             :root {
-                --primary: #ea580c;
-                --primary-hover: #c2410c;
-                --bg: #0c0a09;
-                --card-bg: #1c1917;
-                --text: #fafaf9;
-                --text-muted: #a8a29e;
-                --accent: #f97316;
+                --primary: #16a34a;
+                --primary-hover: #15803d;
+                --bg: #022c22;
+                --card-bg: #052e16;
+                --text: #f0fdf4;
+                --text-muted: #86efac;
+                --accent: #22c55e;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -101,8 +104,8 @@ def home():
                 background: var(--card-bg);
                 padding: 30px;
                 border-radius: 12px;
-                box-shadow: 0 10px 25px rgba(234,88,12,0.2);
-                border: 1px solid #44403c;
+                box-shadow: 0 10px 25px rgba(34,197,94,0.2);
+                border: 1px solid #14532d;
             }
             h1 { color: var(--accent); font-size: 1.8rem; margin-top: 0; }
             p { color: var(--text-muted); }
@@ -111,8 +114,8 @@ def home():
                 width: 100%;
                 padding: 10px;
                 border-radius: 6px;
-                border: 1px solid #57534e;
-                background: #0c0a09;
+                border: 1px solid #166534;
+                background: #022c22;
                 color: white;
                 box-sizing: border-box;
             }
@@ -131,7 +134,7 @@ def home():
             button:hover { background: var(--primary-hover); }
             .student-list { margin-top: 30px; }
             .student-item {
-                background: #0c0a09;
+                background: #022c22;
                 padding: 12px;
                 border-radius: 6px;
                 margin-bottom: 8px;
@@ -147,6 +150,9 @@ def home():
             <h1>🎓 Student Registration Portal</h1>
             <p>Cybage DevOps Multi-Agent Cloud Run Demo</p>
             <form id="regForm">
+                <label for="roll_no">Roll Number</label>
+                <input type="text" id="roll_no" required placeholder="ROLL-101">
+
                 <label for="name">Full Name</label>
                 <input type="text" id="name" required placeholder="John Doe">
 
@@ -189,14 +195,14 @@ def home():
                 const data = await res.json();
                 const listEl = document.getElementById('list');
                 if(data.length === 0) {
-                    listEl.innerHTML = '<p style="color: #78716c;">No students registered yet.</p>';
+                    listEl.innerHTML = '<p style="color: #4ade80;">No students registered yet.</p>';
                     return;
                 }
                 listEl.innerHTML = data.map(s => `
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#a8a29e;">Gender: ${s.gender} | City: ${s.city}, ${s.country} | Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#86efac;">Roll No: ${s.roll_no} | Gender: ${s.gender} | City: ${s.city}, ${s.country} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
@@ -204,6 +210,7 @@ def home():
 
             document.getElementById('regForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const roll_no = document.getElementById('roll_no').value;
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
                 const gender = document.getElementById('gender').value;
@@ -214,7 +221,7 @@ def home():
                 await fetch('/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name, email, gender, city, country, course})
+                    body: JSON.stringify({roll_no, name, email, gender, city, country, course})
                 });
                 e.target.reset();
                 fetchStudents();
