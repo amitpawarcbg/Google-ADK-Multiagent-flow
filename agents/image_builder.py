@@ -28,12 +28,13 @@ class ImageBuilderSubAgent(BaseADKAgent):
         """
         logger.info(f"[{self.name}] Initiating build for repo={repo}, branch={branch}, tag={tag}")
         
-        # Use reasoning model to formulate build plan
         reasoning = self.generate_agent_reasoning(f"Prepare GAR build for {repo} on branch {branch} with tag {tag}")
         logger.info(f"[{self.name}] Agent Reasoning: {reasoning}")
 
         repo_basename = repo.split("/")[-1].lower()
-        image_repo_path = f"{settings.gcp_region}-docker.pkg.dev/{settings.gcp_project_id}/{settings.gar_repository}/{repo_basename}"
+        project_id = settings.gcp_project_id
+        region = settings.gcp_region
+        image_repo_path = f"{region}-docker.pkg.dev/{project_id}/{settings.gar_repository}/{repo_basename}"
         latest_image_tag = f"{image_repo_path}:latest"
 
         # Clone merged commit source from GitHub into temp folder
@@ -47,14 +48,14 @@ class ImageBuilderSubAgent(BaseADKAgent):
         
         try:
             clone_res = subprocess.run(clone_cmd, shell=True, capture_output=True, text=True, timeout=60)
-            logger.info(f"[{self.name}] Git clone output: {clone_res.stdout.strip()}")
+            logger.info(f"[{self.name}] Git clone stdout: {clone_res.stdout.strip()}")
             app_dir = os.path.join(clone_dir, "app") if os.path.exists(os.path.join(clone_dir, "app")) else clone_dir
         except Exception as e:
-            logger.warning(f"[{self.name}] Git clone warning: {e}. Falling back to local workspace app directory.")
+            logger.warning(f"[{self.name}] Git clone note: {e}. Falling back to local app directory.")
             app_dir = "app"
 
         # Build execution wrapper (gcloud builds submit app directory)
-        build_command = f"gcloud builds submit {app_dir} --tag {latest_image_tag} --project {settings.gcp_project_id}"
+        build_command = f"gcloud builds submit {app_dir} --tag {latest_image_tag} --project {project_id}"
         logger.info(f"[{self.name}] Executing build command: {build_command}")
 
         try:
@@ -65,10 +66,10 @@ class ImageBuilderSubAgent(BaseADKAgent):
                 text=True,
                 timeout=300
             )
-            logger.info(f"[{self.name}] Build output stdout: {cmd_result.stdout.strip()}")
-            logger.info(f"[{self.name}] Build output stderr: {cmd_result.stderr.strip()}")
+            logger.info(f"[{self.name}] Build stdout: {cmd_result.stdout.strip()}")
+            logger.info(f"[{self.name}] Build stderr: {cmd_result.stderr.strip()}")
         except Exception as e:
-            logger.warning(f"[{self.name}] Build subprocess note: {e}")
+            logger.error(f"[{self.name}] Build error: {e}")
         finally:
             if os.path.exists(clone_dir):
                 shutil.rmtree(clone_dir, ignore_errors=True)

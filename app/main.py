@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="2.1.0"
+    version="2.2.0"
 )
 
 # In-memory student storage
@@ -18,6 +18,7 @@ class StudentCreate(BaseModel):
     email: str
     course: str
     city: str
+    gender: str
 
 class StudentResponse(BaseModel):
     id: str
@@ -25,6 +26,7 @@ class StudentResponse(BaseModel):
     email: str
     course: str
     city: str
+    gender: str
 
 @app.get("/health")
 def health_check():
@@ -38,7 +40,8 @@ def register_student(student: StudentCreate):
         "name": student.name,
         "email": student.email,
         "course": student.course,
-        "city": student.city
+        "city": student.city,
+        "gender": student.gender
     }
     db[student_id] = record
     return record
@@ -146,6 +149,14 @@ def home():
                 <label for="email">Email Address</label>
                 <input type="email" id="email" required placeholder="john@example.com">
 
+                <label for="gender">Gender</label>
+                <select id="gender">
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Non-Binary / Other">Non-Binary / Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+
                 <label for="city">City</label>
                 <input type="text" id="city" required placeholder="Pune / San Francisco">
 
@@ -178,7 +189,7 @@ def home():
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#94a3b8;">City: ${s.city} | Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#94a3b8;">Gender: ${s.gender} | City: ${s.city} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
@@ -188,13 +199,14 @@ def home():
                 e.preventDefault();
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
+                const gender = document.getElementById('gender').value;
                 const city = document.getElementById('city').value;
                 const course = document.getElementById('course').value;
                 
                 await fetch('/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name, email, city, course})
+                    body: JSON.stringify({name, email, gender, city, course})
                 });
                 e.target.reset();
                 fetchStudents();

@@ -20,6 +20,7 @@ def test_register_student():
     payload = {
         "name": "Jane Doe",
         "email": "jane@cybage.com",
+        "gender": "Female",
         "city": "San Francisco",
         "course": "Multi-Agent Systems & GenAI"
     }
@@ -29,12 +30,13 @@ def test_register_student():
     assert "id" in data
     assert data["name"] == "Jane Doe"
     assert data["email"] == "jane@cybage.com"
+    assert data["gender"] == "Female"
     assert data["city"] == "San Francisco"
     assert data["course"] == "Multi-Agent Systems & GenAI"
 
 def test_list_and_get_students():
     # Register first
-    reg = client.post("/register", json={"name": "Alice", "email": "alice@cybage.com", "city": "Seattle", "course": "DevOps"})
+    reg = client.post("/register", json={"name": "Alice", "email": "alice@cybage.com", "gender": "Female", "city": "Seattle", "course": "DevOps"})
     student_id = reg.json()["id"]
 
     # List
@@ -46,10 +48,11 @@ def test_list_and_get_students():
     get_res = client.get(f"/students/{student_id}")
     assert get_res.status_code == 200
     assert get_res.json()["name"] == "Alice"
+    assert get_res.json()["gender"] == "Female"
     assert get_res.json()["city"] == "Seattle"
 
 def test_delete_student():
-    reg = client.post("/register", json={"name": "Bob", "email": "bob@cybage.com", "city": "Chicago", "course": "Cloud Native"})
+    reg = client.post("/register", json={"name": "Bob", "email": "bob@cybage.com", "gender": "Male", "city": "Chicago", "course": "Cloud Native"})
     student_id = reg.json()["id"]
 
     del_res = client.delete(f"/students/{student_id}")
