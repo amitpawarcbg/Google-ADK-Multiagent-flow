@@ -18,31 +18,33 @@ def test_health_check():
 
 def test_register_student():
     payload = {
-        "roll_no": "RN-2026-PINK",
+        "roll_no": "RN-2026-BLUE",
         "name": "Jane Doe",
         "email": "jane@cybage.com",
         "gender": "Female",
         "city": "San Francisco",
         "country": "USA",
         "pincode": "94105",
+        "landmark": "Near Salesforce Tower",
         "course": "Multi-Agent Systems & GenAI"
     }
     response = client.post("/register", json=payload)
     assert response.status_code == 201
     data = response.json()
     assert "id" in data
-    assert data["roll_no"] == "RN-2026-PINK"
+    assert data["roll_no"] == "RN-2026-BLUE"
     assert data["name"] == "Jane Doe"
     assert data["email"] == "jane@cybage.com"
     assert data["gender"] == "Female"
     assert data["city"] == "San Francisco"
     assert data["country"] == "USA"
     assert data["pincode"] == "94105"
+    assert data["landmark"] == "Near Salesforce Tower"
     assert data["course"] == "Multi-Agent Systems & GenAI"
 
 def test_list_and_get_students():
     # Register first
-    reg = client.post("/register", json={"roll_no": "RN-101", "name": "Alice", "email": "alice@cybage.com", "gender": "Female", "city": "Seattle", "country": "USA", "pincode": "98101", "course": "DevOps"})
+    reg = client.post("/register", json={"roll_no": "RN-101", "name": "Alice", "email": "alice@cybage.com", "gender": "Female", "city": "Seattle", "country": "USA", "pincode": "98101", "landmark": "Space Needle", "course": "DevOps"})
     student_id = reg.json()["id"]
 
     # List
@@ -59,9 +61,10 @@ def test_list_and_get_students():
     assert get_res.json()["city"] == "Seattle"
     assert get_res.json()["country"] == "USA"
     assert get_res.json()["pincode"] == "98101"
+    assert get_res.json()["landmark"] == "Space Needle"
 
 def test_delete_student():
-    reg = client.post("/register", json={"roll_no": "RN-102", "name": "Bob", "email": "bob@cybage.com", "gender": "Male", "city": "Chicago", "country": "USA", "pincode": "60601", "course": "Cloud Native"})
+    reg = client.post("/register", json={"roll_no": "RN-102", "name": "Bob", "email": "bob@cybage.com", "gender": "Male", "city": "Chicago", "country": "USA", "pincode": "60601", "landmark": "Willis Tower", "course": "Cloud Native"})
     student_id = reg.json()["id"]
 
     del_res = client.delete(f"/students/{student_id}")
