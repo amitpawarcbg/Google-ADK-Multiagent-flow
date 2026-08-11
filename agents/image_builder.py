@@ -43,19 +43,20 @@ class ImageBuilderSubAgent(BaseADKAgent):
             shutil.rmtree(clone_dir, ignore_errors=True)
 
         github_url = f"https://github.com/{repo}.git"
-        clone_cmd = f"git clone --depth 1 --branch {branch} {github_url} {clone_dir}"
+        # Clone default/main branch to capture merged PR commits
+        clone_cmd = f"git clone --depth 1 {github_url} {clone_dir}"
         logger.info(f"[{self.name}] Cloning GitHub repository: {clone_cmd}")
         
         try:
             clone_res = subprocess.run(clone_cmd, shell=True, capture_output=True, text=True, timeout=60)
             logger.info(f"[{self.name}] Git clone stdout: {clone_res.stdout.strip()}")
-            app_dir = os.path.join(clone_dir, "app") if os.path.exists(os.path.join(clone_dir, "app")) else clone_dir
+            build_dir = clone_dir if os.path.exists(os.path.join(clone_dir, "Dockerfile")) else "."
         except Exception as e:
-            logger.warning(f"[{self.name}] Git clone note: {e}. Falling back to local app directory.")
-            app_dir = "app"
+            logger.warning(f"[{self.name}] Git clone note: {e}. Falling back to local workspace.")
+            build_dir = "."
 
-        # Build execution wrapper (gcloud builds submit app directory)
-        build_command = f"gcloud builds submit {app_dir} --tag {latest_image_tag} --project {project_id}"
+        # Build execution wrapper (gcloud builds submit repository root directory containing Dockerfile & app/main.py)
+        build_command = f"gcloud builds submit {build_dir} --tag {latest_image_tag} --project {project_id}"
         logger.info(f"[{self.name}] Executing build command: {build_command}")
 
         try:
