@@ -1,9 +1,18 @@
 import os
 import pytest
+from unittest.mock import patch
+from agents.base import settings
 from agents.image_builder import image_builder_agent
 from agents.cloud_run_deployer import cloud_run_deployer_agent
 from agents.slack_notifier import slack_notifier_agent
 from agents.deployment_manager import deployment_manager_agent
+
+@pytest.fixture(autouse=True)
+def mock_slack_webhook_for_tests():
+    original_url = settings.slack_webhook_url
+    settings.slack_webhook_url = "https://hooks.slack.com/services/mock/test_channel"
+    yield
+    settings.slack_webhook_url = original_url
 
 def test_image_builder_sub_agent():
     res = image_builder_agent.build_and_push_image(

@@ -99,7 +99,11 @@ class ImageCreatorSlackNotifierSubAgent(BaseADKAgent):
                     "color": "#22c55e",
                     "title": f"Repository: {repo} (PR #{pr_id})",
                     "title_link": service_url,
-                    "text": f"*Commit:* `{commit[:8]}`\n*Live URL:* {service_url}\n*Artifact Card:* {gcs_png_url}",
+                    "text": (
+                        f"*Commit:* `{commit[:8]}`\n"
+                        f"*Live App URL:* <{service_url}|{service_url}>\n"
+                        f"*Artifact Card:* <{gcs_png_url}|View Artifact PNG Card>"
+                    ),
                     "image_url": gcs_png_url,
                     "footer": "Google ADK Multi-Agent Pipeline • Vertex AI gemini-2.5-flash",
                     "ts": int(datetime.now().timestamp())
