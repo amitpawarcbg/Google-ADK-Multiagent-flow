@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="2.7.0"
+    version="2.8.0"
 )
 
 # In-memory student storage
@@ -23,6 +23,7 @@ class StudentCreate(BaseModel):
     roll_no: str
     pincode: str
     landmark: str
+    contact_no: str
 
 class StudentResponse(BaseModel):
     id: str
@@ -35,6 +36,7 @@ class StudentResponse(BaseModel):
     roll_no: str
     pincode: str
     landmark: str
+    contact_no: str
 
 @app.get("/health")
 def health_check():
@@ -53,7 +55,8 @@ def register_student(student: StudentCreate):
         "country": student.country,
         "roll_no": student.roll_no,
         "pincode": student.pincode,
-        "landmark": student.landmark
+        "landmark": student.landmark,
+        "contact_no": student.contact_no
     }
     db[student_id] = record
     return record
@@ -86,13 +89,13 @@ def home():
         <title>Cybage DevOps - Student Registration Portal</title>
         <style>
             :root {
-                --primary: #2563eb;
-                --primary-hover: #1d4ed8;
-                --bg: #0f172a;
-                --card-bg: #1e293b;
-                --text: #f8fafc;
-                --text-muted: #94a3b8;
-                --accent: #38bdf8;
+                --primary: #16a34a;
+                --primary-hover: #15803d;
+                --bg: #022c22;
+                --card-bg: #052e16;
+                --text: #f0fdf4;
+                --text-muted: #86efac;
+                --accent: #22c55e;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -110,8 +113,8 @@ def home():
                 background: var(--card-bg);
                 padding: 30px;
                 border-radius: 12px;
-                box-shadow: 0 10px 25px rgba(37,99,235,0.25);
-                border: 1px solid #334155;
+                box-shadow: 0 10px 25px rgba(34,197,94,0.2);
+                border: 1px solid #14532d;
             }
             h1 { color: var(--accent); font-size: 1.8rem; margin-top: 0; }
             p { color: var(--text-muted); }
@@ -120,8 +123,8 @@ def home():
                 width: 100%;
                 padding: 10px;
                 border-radius: 6px;
-                border: 1px solid #475569;
-                background: #0f172a;
+                border: 1px solid #166534;
+                background: #022c22;
                 color: white;
                 box-sizing: border-box;
             }
@@ -140,7 +143,7 @@ def home():
             button:hover { background: var(--primary-hover); }
             .student-list { margin-top: 30px; }
             .student-item {
-                background: #0f172a;
+                background: #022c22;
                 padding: 12px;
                 border-radius: 6px;
                 margin-bottom: 8px;
@@ -164,6 +167,9 @@ def home():
 
                 <label for="email">Email Address</label>
                 <input type="email" id="email" required placeholder="john@example.com">
+
+                <label for="contact_no">Contact Number</label>
+                <input type="text" id="contact_no" required placeholder="+1 555-0199 / +91 9876543210">
 
                 <label for="gender">Gender</label>
                 <select id="gender">
@@ -207,14 +213,14 @@ def home():
                 const data = await res.json();
                 const listEl = document.getElementById('list');
                 if(data.length === 0) {
-                    listEl.innerHTML = '<p style="color: #64748b;">No students registered yet.</p>';
+                    listEl.innerHTML = '<p style="color: #4ade80;">No students registered yet.</p>';
                     return;
                 }
                 listEl.innerHTML = data.map(s => `
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#94a3b8;">Roll No: ${s.roll_no} | Gender: ${s.gender} | City: ${s.city}, ${s.country} | Landmark: ${s.landmark} | Pin: ${s.pincode} | Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#86efac;">Roll No: ${s.roll_no} | Phone: ${s.contact_no} | Gender: ${s.gender} | City: ${s.city}, ${s.country} | Landmark: ${s.landmark} | Pin: ${s.pincode} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
@@ -225,6 +231,7 @@ def home():
                 const roll_no = document.getElementById('roll_no').value;
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
+                const contact_no = document.getElementById('contact_no').value;
                 const gender = document.getElementById('gender').value;
                 const city = document.getElementById('city').value;
                 const country = document.getElementById('country').value;
@@ -235,7 +242,7 @@ def home():
                 await fetch('/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({roll_no, name, email, gender, city, country, pincode, landmark, course})
+                    body: JSON.stringify({roll_no, name, email, contact_no, gender, city, country, pincode, landmark, course})
                 });
                 e.target.reset();
                 fetchStudents();
