@@ -76,13 +76,17 @@ class ImageCreatorSlackNotifierSubAgent(BaseADKAgent):
             blob = bucket.blob(filename)
             blob.upload_from_filename(local_file_path, content_type="image/png")
             logger.info(f"[{self.name}] Successfully uploaded {filename} via SDK to GCS bucket {settings.gcs_bucket_name}")
+            return f"https://storage.googleapis.com/{settings.gcs_bucket_name}/{filename}"
         except Exception as e:
-            logger.warning(f"[{self.name}] GCS SDK upload note: {e}. Running gcloud storage cp fallback.")
+            logger.warning(f"[{self.name}] GCS SDK upload error: {e}. Attempting gcloud storage cp fallback...")
             cmd = f"gcloud storage cp {local_file_path} gs://{settings.gcs_bucket_name}/{filename} --project {settings.gcp_project_id}"
             res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            logger.info(f"[{self.name}] gcloud storage cp output: {res.stdout.strip()}")
-
-        return f"https://storage.googleapis.com/{settings.gcs_bucket_name}/{filename}"
+            if res.returncode == 0:
+                logger.info(f"[{self.name}] gcloud storage cp succeeded: {res.stdout.strip()}")
+                return f"https://storage.googleapis.com/{settings.gcs_bucket_name}/{filename}"
+            else:
+                logger.error(f"[{self.name}] GCS upload failed via both SDK and CLI: {res.stderr.strip()}")
+                raise RuntimeError(f"GCS upload failed: {e} | CLI error: {res.stderr.strip()}")
 
     def post_to_slack(self, repo: str, pr_id: int, commit: str, service_url: str, gcs_png_url: str) -> bool:
         """
