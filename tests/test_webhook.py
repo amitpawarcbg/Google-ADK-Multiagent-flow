@@ -13,7 +13,7 @@ def test_github_webhook_github_pr_event():
     payload = {
         "action": "closed",
         "repository": {
-            "full_name": "cybage-devops/student-app"
+            "full_name": "amitpawarcbg/Google-ADK-Multiagent-flow"
         },
         "pull_request": {
             "number": 88,
@@ -31,7 +31,7 @@ def test_github_webhook_github_pr_event():
 
 def test_github_webhook_direct_trigger():
     payload = {
-        "repo": "cybage-devops/student-app",
+        "repo": "amitpawarcbg/Google-ADK-Multiagent-flow",
         "pr_id": 99,
         "branch": "main",
         "commit": "1a2b3c4d",
