@@ -16,7 +16,7 @@ def mock_slack_webhook_for_tests():
 
 def test_image_builder_sub_agent():
     res = image_builder_agent.build_and_push_image(
-        repo="cybage-devops/student-app",
+        repo="amitpawarcbg/Google-ADK-Multiagent-flow",
         branch="main",
         tag="pr42-a1b2c3d-20260803-132000"
     )
@@ -43,7 +43,7 @@ concurrency: 80
 
 def test_slack_notifier_agent():
     res = slack_notifier_agent.create_image_and_post_to_slack(
-        repo="cybage-devops/student-app",
+        repo="amitpawarcbg/Google-ADK-Multiagent-flow",
         pr_id=42,
         commit="a1b2c3d4",
         image="us-central1-docker.pkg.dev/proj/repo/app:tag",
@@ -55,7 +55,7 @@ def test_slack_notifier_agent():
 
 def test_orchestrator_deployment_manager():
     payload = {
-        "repo": "cybage-devops/student-app",
+        "repo": "amitpawarcbg/Google-ADK-Multiagent-flow",
         "pr_id": 101,
         "branch": "feature/a2a-flow",
         "commit": "c9f8e7d6a5b4",
