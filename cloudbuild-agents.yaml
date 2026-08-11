@@ -17,7 +17,7 @@ steps:
 
   # 5. Build github-webhook-service image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/github-webhook-service:latest', '-f', 'Dockerfile', '.']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/github-webhook-service:latest', '-f', 'Dockerfile.webhook', '.']
 
 images:
   - 'us-central1-docker.pkg.dev/amittechnet-0626/cybage-devops-repo/deployment-manager-agent:latest'
