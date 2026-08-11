@@ -43,17 +43,18 @@ class ImageBuilderSubAgent(BaseADKAgent):
             shutil.rmtree(clone_dir, ignore_errors=True)
 
         github_url = f"https://github.com/{repo}.git"
-        # Clone default/main branch to capture merged PR commits
         clone_cmd = f"git clone --depth 1 {github_url} {clone_dir}"
         logger.info(f"[{self.name}] Cloning GitHub repository: {clone_cmd}")
         
         try:
             clone_res = subprocess.run(clone_cmd, shell=True, capture_output=True, text=True, timeout=60)
             logger.info(f"[{self.name}] Git clone stdout: {clone_res.stdout.strip()}")
-            build_dir = clone_dir if os.path.exists(os.path.join(clone_dir, "Dockerfile")) else "."
+            if not os.path.exists(os.path.join(clone_dir, "Dockerfile")):
+                raise FileNotFoundError(f"Dockerfile not found in cloned directory {clone_dir}")
+            build_dir = clone_dir
         except Exception as e:
-            logger.warning(f"[{self.name}] Git clone note: {e}. Falling back to local workspace.")
-            build_dir = "."
+            logger.error(f"[{self.name}] Git clone error: {e}")
+            raise RuntimeError(f"Git clone failed for {github_url}: {e}")
 
         # Build execution wrapper (gcloud builds submit repository root directory containing Dockerfile & app/main.py)
         build_command = f"gcloud builds submit {build_dir} --tag {latest_image_tag} --project {project_id}"
@@ -65,12 +66,15 @@ class ImageBuilderSubAgent(BaseADKAgent):
                 shell=True,
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=600
             )
             logger.info(f"[{self.name}] Build stdout: {cmd_result.stdout.strip()}")
             logger.info(f"[{self.name}] Build stderr: {cmd_result.stderr.strip()}")
+            if cmd_result.returncode != 0:
+                raise RuntimeError(f"gcloud builds submit failed: {cmd_result.stderr.strip()}")
         except Exception as e:
             logger.error(f"[{self.name}] Build error: {e}")
+            raise RuntimeError(f"Build failed for {latest_image_tag}: {e}")
         finally:
             if os.path.exists(clone_dir):
                 shutil.rmtree(clone_dir, ignore_errors=True)
