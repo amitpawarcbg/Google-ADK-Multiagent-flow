@@ -1,4 +1,5 @@
 import os
+import time
 import shutil
 import logging
 import subprocess
@@ -23,7 +24,7 @@ class ImageBuilderSubAgent(BaseADKAgent):
 
     def build_and_push_image(self, repo: str, branch: str, tag: str) -> Dict[str, Any]:
         """
-        Executes build and push of application container image to GAR.
+        Executes build and push of application container image to GAR via non-blocking Cloud Build async submission.
         Returns payload containing image_name:tag.
         """
         logger.info(f"[{self.name}] Initiating build for repo={repo}, branch={branch}, tag={tag}")
@@ -56,22 +57,43 @@ class ImageBuilderSubAgent(BaseADKAgent):
             logger.error(f"[{self.name}] Git clone error: {e}")
             raise RuntimeError(f"Git clone failed for {github_url}: {e}")
 
-        # Build execution wrapper (gcloud builds submit repository root directory containing Dockerfile & app/main.py)
-        build_command = f"gcloud builds submit {build_dir} --tag {latest_image_tag} --project {project_id}"
-        logger.info(f"[{self.name}] Executing build command: {build_command}")
+        # Submit Cloud Build asynchronously to avoid stdout pipe buffer deadlock inside Cloud Run container
+        submit_command = f"gcloud builds submit {build_dir} --tag {latest_image_tag} --project {project_id} --async --format=\"value(id)\""
+        logger.info(f"[{self.name}] Executing async build submission: {submit_command}")
 
         try:
-            cmd_result = subprocess.run(
-                build_command,
+            submit_res = subprocess.run(
+                submit_command,
                 shell=True,
                 capture_output=True,
                 text=True,
-                timeout=600
+                timeout=60
             )
-            logger.info(f"[{self.name}] Build stdout: {cmd_result.stdout.strip()}")
-            logger.info(f"[{self.name}] Build stderr: {cmd_result.stderr.strip()}")
-            if cmd_result.returncode != 0:
-                raise RuntimeError(f"gcloud builds submit failed: {cmd_result.stderr.strip()}")
+            if submit_res.returncode != 0:
+                raise RuntimeError(f"gcloud builds submit --async failed: {submit_res.stderr.strip()}")
+
+            build_id = submit_res.stdout.strip()
+            logger.info(f"[{self.name}] Cloud Build submitted successfully with Build ID: {build_id}")
+
+            # Poll Cloud Build status until completion (max 600s)
+            start_time = time.time()
+            build_status = "WORKING"
+
+            while build_status in ["WORKING", "QUEUED", "PENDING"]:
+                if time.time() - start_time > 600:
+                    raise TimeoutError(f"Cloud Build {build_id} timed out after 600 seconds")
+
+                time.sleep(10)
+                status_cmd = f"gcloud builds describe {build_id} --project {project_id} --format=\"value(status)\""
+                status_res = subprocess.run(status_cmd, shell=True, capture_output=True, text=True, timeout=30)
+                build_status = status_res.stdout.strip()
+                logger.info(f"[{self.name}] Cloud Build {build_id} status: {build_status}")
+
+            if build_status != "SUCCESS":
+                raise RuntimeError(f"Cloud Build {build_id} failed with status: {build_status}")
+
+            logger.info(f"[{self.name}] Cloud Build {build_id} completed successfully!")
+
         except Exception as e:
             logger.error(f"[{self.name}] Build error: {e}")
             raise RuntimeError(f"Build failed for {latest_image_tag}: {e}")
@@ -86,7 +108,7 @@ class ImageBuilderSubAgent(BaseADKAgent):
             "branch": branch,
             "image_name_tag": latest_image_tag,
             "gar_repository": settings.gar_repository,
-            "build_command": build_command,
+            "build_command": submit_command,
             "reasoning": reasoning
         }
 
