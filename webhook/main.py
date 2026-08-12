@@ -9,7 +9,7 @@ logger = logging.getLogger("github-webhook-service")
 app = FastAPI(
     title="GitHub PR Webhook Service - Google ADK Pipeline",
     description="FastAPI Webhook capturing GitHub PR events to trigger the deployment-manager-agent orchestrator.",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 @app.get("/health")
@@ -48,19 +48,20 @@ async def github_webhook_handler(request: Request, background_tasks: BackgroundT
     if "pull_request" in raw_payload:
         pr = raw_payload.get("pull_request", {})
         repo = raw_payload.get("repository", {}).get("full_name", default_repo)
-        pr_id = pr.get("number", 1)
-        branch = pr.get("base", {}).get("ref", pr.get("head", {}).get("ref", "main"))
+        # Extract PR number safely from top-level 'number' or 'pull_request.number'
+        pr_id = raw_payload.get("number") or pr.get("number") or 1
+        branch = pr.get("base", {}).get("ref", "main")
         commit = pr.get("head", {}).get("sha", "a1b2c3d")
         action = raw_payload.get("action")
         is_merged = pr.get("merged", False)
 
-        # Ignore unmerged closed events or non-merge events if action is closed
-        if action == "closed" and not is_merged:
-            logger.info(f"[webhook-service] Ignoring PR #{pr_id} closed event because merged=False")
-            return {"status": "IGNORED", "message": f"PR #{pr_id} was closed without merge."}
+        # Ignore unmerged closed events or non-closed events
+        if action != "closed" or not is_merged:
+            logger.info(f"[webhook-service] Ignoring PR #{pr_id} action={action} (merged={is_merged})")
+            return {"status": "IGNORED", "message": f"PR #{pr_id} action '{action}' (merged={is_merged}) ignored."}
     else:
         repo = raw_payload.get("repo", default_repo)
-        pr_id = raw_payload.get("pr_id", 25)
+        pr_id = raw_payload.get("pr_id", 29)
         branch = raw_payload.get("branch", "main")
         commit = raw_payload.get("commit", "a1b2c3d")
         date_str = raw_payload.get("date", date_str)

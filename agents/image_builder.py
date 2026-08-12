@@ -36,6 +36,7 @@ class ImageBuilderSubAgent(BaseADKAgent):
         project_id = settings.gcp_project_id
         region = settings.gcp_region
         image_repo_path = f"{region}-docker.pkg.dev/{project_id}/{settings.gar_repository}/{repo_basename}"
+        unique_image_tag = f"{image_repo_path}:{tag}"
         latest_image_tag = f"{image_repo_path}:latest"
 
         # Clone merged commit source from GitHub into temp folder
@@ -58,7 +59,7 @@ class ImageBuilderSubAgent(BaseADKAgent):
             raise RuntimeError(f"Git clone failed for {github_url}: {e}")
 
         # Submit Cloud Build asynchronously to avoid stdout pipe buffer deadlock inside Cloud Run container
-        submit_command = f"gcloud builds submit {build_dir} --tag {latest_image_tag} --project {project_id} --async --format=\"value(id)\""
+        submit_command = f"gcloud builds submit {build_dir} --tag {unique_image_tag} --project {project_id} --async --format=\"value(id)\""
         logger.info(f"[{self.name}] Executing async build submission: {submit_command}")
 
         try:
@@ -96,7 +97,7 @@ class ImageBuilderSubAgent(BaseADKAgent):
 
         except Exception as e:
             logger.error(f"[{self.name}] Build error: {e}")
-            raise RuntimeError(f"Build failed for {latest_image_tag}: {e}")
+            raise RuntimeError(f"Build failed for {unique_image_tag}: {e}")
         finally:
             if os.path.exists(clone_dir):
                 shutil.rmtree(clone_dir, ignore_errors=True)
@@ -106,7 +107,7 @@ class ImageBuilderSubAgent(BaseADKAgent):
             "agent": self.name,
             "repo": repo,
             "branch": branch,
-            "image_name_tag": latest_image_tag,
+            "image_name_tag": unique_image_tag,
             "gar_repository": settings.gar_repository,
             "build_command": submit_command,
             "reasoning": reasoning
