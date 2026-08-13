@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="4.1.0"
+    version="4.2.0"
 )
 
 # In-memory student storage
@@ -89,13 +89,13 @@ def home():
         <title>Cybage DevOps - Student Registration Portal</title>
         <style>
             :root {
-                --primary: #22c55e;
-                --primary-hover: #16a34a;
-                --bg: #f0fdf4;
+                --primary: #a855f7;
+                --primary-hover: #9333ea;
+                --bg: #faf5ff;
                 --card-bg: #ffffff;
-                --text: #14532d;
-                --text-muted: #15803d;
-                --accent: #16a34a;
+                --text: #581c87;
+                --text-muted: #7e22ce;
+                --accent: #9333ea;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -113,19 +113,19 @@ def home():
                 background: var(--card-bg);
                 padding: 30px;
                 border-radius: 12px;
-                box-shadow: 0 10px 25px rgba(34,197,94,0.15);
-                border: 1px solid #bbf7d0;
+                box-shadow: 0 10px 25px rgba(168,85,247,0.15);
+                border: 1px solid #e9d5ff;
             }
             h1 { color: var(--accent); font-size: 1.8rem; margin-top: 0; }
             p { color: var(--text-muted); }
-            label { display: block; margin: 12px 0 6px; font-weight: 600; color: #166534; }
+            label { display: block; margin: 12px 0 6px; font-weight: 600; color: #7e22ce; }
             input, select {
                 width: 100%;
                 padding: 10px;
                 border-radius: 6px;
-                border: 1px solid #86efac;
-                background: #f0fdf4;
-                color: #14532d;
+                border: 1px solid #d8b4fe;
+                background: #faf5ff;
+                color: #581c87;
                 box-sizing: border-box;
             }
             button {
@@ -143,7 +143,7 @@ def home():
             button:hover { background: var(--primary-hover); }
             .student-list { margin-top: 30px; }
             .student-item {
-                background: #f0fdf4;
+                background: #faf5ff;
                 padding: 12px;
                 border-radius: 6px;
                 margin-bottom: 8px;
@@ -213,14 +213,14 @@ def home():
                 const data = await res.json();
                 const listEl = document.getElementById('list');
                 if(data.length === 0) {
-                    listEl.innerHTML = '<p style="color: #15803d;">No students registered yet.</p>';
+                    listEl.innerHTML = '<p style="color: #7e22ce;">No students registered yet.</p>';
                     return;
                 }
                 listEl.innerHTML = data.map(s => `
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#15803d;">Roll No: ${s.roll_no} | Phone: ${s.contact_no} | Gender: ${s.gender} | City: ${s.city}, ${s.country} | Landmark: ${s.landmark} | Pin: ${s.pincode} | Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#7e22ce;">Roll No: ${s.roll_no} | Phone: ${s.contact_no} | Gender: ${s.gender} | City: ${s.city}, ${s.country} | Landmark: ${s.landmark} | Pin: ${s.pincode} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
