@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="4.3.0"
+    version="4.4.0"
 )
 
 # In-memory student storage
