@@ -1,1 +1,0 @@
-# GCP ADK Agents Package
