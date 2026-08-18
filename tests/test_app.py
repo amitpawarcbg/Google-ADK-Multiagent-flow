@@ -25,7 +25,6 @@ def test_register_student():
         "gender": "Female",
         "city": "San Francisco",
         "country": "USA",
-        "pincode": "94105",
         "landmark": "Near Salesforce Tower",
         "course": "Multi-Agent Systems & GenAI"
     }
@@ -40,13 +39,12 @@ def test_register_student():
     assert data["gender"] == "Female"
     assert data["city"] == "San Francisco"
     assert data["country"] == "USA"
-    assert data["pincode"] == "94105"
     assert data["landmark"] == "Near Salesforce Tower"
     assert data["course"] == "Multi-Agent Systems & GenAI"
 
 def test_list_and_get_students():
     # Register first
-    reg = client.post("/register", json={"roll_no": "RN-101", "name": "Alice", "email": "alice@cybage.com", "contact_no": "+91 9876543210", "gender": "Female", "city": "Seattle", "country": "USA", "pincode": "98101", "landmark": "Space Needle", "course": "DevOps"})
+    reg = client.post("/register", json={"roll_no": "RN-101", "name": "Alice", "email": "alice@cybage.com", "contact_no": "+91 9876543210", "gender": "Female", "city": "Seattle", "country": "USA", "landmark": "Space Needle", "course": "DevOps"})
     student_id = reg.json()["id"]
 
     # List
@@ -63,11 +61,10 @@ def test_list_and_get_students():
     assert get_res.json()["gender"] == "Female"
     assert get_res.json()["city"] == "Seattle"
     assert get_res.json()["country"] == "USA"
-    assert get_res.json()["pincode"] == "98101"
     assert get_res.json()["landmark"] == "Space Needle"
 
 def test_delete_student():
-    reg = client.post("/register", json={"roll_no": "RN-102", "name": "Bob", "email": "bob@cybage.com", "contact_no": "+1 555-0188", "gender": "Male", "city": "Chicago", "country": "USA", "pincode": "60601", "landmark": "Willis Tower", "course": "Cloud Native"})
+    reg = client.post("/register", json={"roll_no": "RN-102", "name": "Bob", "email": "bob@cybage.com", "contact_no": "+1 555-0188", "gender": "Male", "city": "Chicago", "country": "USA", "landmark": "Willis Tower", "course": "Cloud Native"})
     student_id = reg.json()["id"]
 
     del_res = client.delete(f"/students/{student_id}")
