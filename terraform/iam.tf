@@ -39,3 +39,39 @@ resource "google_project_iam_member" "sa_user" {
   role    = "roles/iam.serviceAccountUser"
   member  = "serviceAccount:${google_service_account.adk_agent_sa.email}"
 }
+
+# 6. Workload Identity Pool for GitHub Actions
+resource "google_iam_workload_identity_pool" "github_pool" {
+  provider                  = google
+  workload_identity_pool_id = "github-actions-pool"
+  display_name              = "GitHub Actions Pool"
+  description               = "Workload Identity Pool for GitHub Actions CI/CD"
+  project                   = var.project_id
+}
+
+# 7. Workload Identity Provider for GitHub OIDC
+resource "google_iam_workload_identity_pool_provider" "github_provider" {
+  provider                           = google
+  workload_identity_pool_id          = google_iam_workload_identity_pool.github_pool.workload_identity_pool_id
+  workload_identity_pool_provider_id = "github-provider"
+  display_name                       = "GitHub Provider"
+  project                            = var.project_id
+
+  attribute_mapping = {
+    "google.subject"       = "assertion.sub"
+    "attribute.actor"      = "assertion.actor"
+    "attribute.repository" = "assertion.repository"
+    "attribute.owner"      = "assertion.repository_owner"
+  }
+
+  oidc {
+    issuer_uri = "https://token.actions.githubusercontent.com"
+  }
+}
+
+# 8. Allow GitHub Actions from repository to impersonate Service Account
+resource "google_service_account_iam_member" "wif_sa_impersonation" {
+  service_account_id = google_service_account.adk_agent_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repository}"
+}

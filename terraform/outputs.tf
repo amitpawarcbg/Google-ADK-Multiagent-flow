@@ -37,3 +37,8 @@ output "service_account_email" {
   description = "ADK Multi-Agent Service Account Email"
   value       = google_service_account.adk_agent_sa.email
 }
+
+output "workload_identity_provider" {
+  description = "Full identifier of the Workload Identity Provider for GitHub Actions"
+  value       = google_iam_workload_identity_pool_provider.github_provider.name
+}
