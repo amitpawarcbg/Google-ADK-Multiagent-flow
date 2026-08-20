@@ -1,7 +1,7 @@
 variable "project_id" {
   type        = string
   description = "GCP Project ID"
-  default     = "cybage-devops-prod"
+  default     = "amittechnet-0626"
 }
 
 variable "region" {

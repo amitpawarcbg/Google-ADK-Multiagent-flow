@@ -1,0 +1,5 @@
+project_id          = "amittechnet-0626"
+region              = "us-central1"
+gar_repository_name = "cybage-devops-repo"
+gcs_bucket_name     = "cybage-devops-deployment-artifacts"
+github_repository   = "amitpawarcbg/Google-ADK-Multiagent-flow"
