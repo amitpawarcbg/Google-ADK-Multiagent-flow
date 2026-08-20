@@ -20,6 +20,9 @@ permissions:
   id-token: write
   pull-requests: write
 
+env:
+  TF_VAR_project_id: "amittechnet-0626"
+
 jobs:
   terraform:
     name: "Terraform"
