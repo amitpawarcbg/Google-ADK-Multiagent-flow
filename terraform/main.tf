@@ -224,6 +224,14 @@ resource "google_cloud_run_v2_service" "webhook_service" {
 
 # IAM Public Access policies for agent Cloud Run services
 resource "google_cloud_run_v2_service_iam_member" "agents_public_access" {
+  depends_on = [
+    google_cloud_run_v2_service.deployment_manager_agent,
+    google_cloud_run_v2_service.image_builder_sub_agent,
+    google_cloud_run_v2_service.cloud_run_deployer_sub_agent,
+    google_cloud_run_v2_service.slack_notifier_sub_agent,
+    google_cloud_run_v2_service.webhook_service,
+  ]
+
   for_each = toset([
     "deployment-manager-agent",
     "image-builder-sub-agent",
