@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.3.0"
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -200,7 +200,7 @@ resource "google_cloud_run_v2_service" "webhook_service" {
 
     containers {
       image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.gar_repository_name}/github-webhook-service:latest"
-      
+
       env {
         name  = "GCP_PROJECT_ID"
         value = var.project_id
