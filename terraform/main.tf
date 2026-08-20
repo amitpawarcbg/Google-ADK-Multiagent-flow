@@ -6,6 +6,10 @@ terraform {
       version = "~> 5.0"
     }
   }
+  backend "gcs" {
+    bucket = "amittechnet-0626-tfstate"
+    prefix = "terraform/state"
+  }
 }
 
 provider "google" {
@@ -220,11 +224,11 @@ resource "google_cloud_run_v2_service" "webhook_service" {
 # IAM Public Access policies for agent Cloud Run services
 resource "google_cloud_run_v2_service_iam_member" "agents_public_access" {
   for_each = toset([
-    google_cloud_run_v2_service.deployment_manager_agent.name,
-    google_cloud_run_v2_service.image_builder_sub_agent.name,
-    google_cloud_run_v2_service.cloud_run_deployer_sub_agent.name,
-    google_cloud_run_v2_service.slack_notifier_sub_agent.name,
-    google_cloud_run_v2_service.webhook_service.name,
+    "deployment-manager-agent",
+    "image-builder-sub-agent",
+    "cloud-run-deployer-sub-agent",
+    "image-creator-slack-notifier-sub-agent",
+    "github-webhook-service",
   ])
 
   project  = var.project_id
