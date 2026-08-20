@@ -1,0 +1,150 @@
+# Implementation Plan - GCP HTTPS Load Balancer, Cloud Armor & DNS (Console UI Guide)
+
+This guide provides step-by-step instructions to configure the GCP External HTTP(S) Load Balancer, Google-managed SSL Certificate, Cloud DNS, and Cloud Armor Standard using the **Google Cloud Console (Web GUI)**.
+
+---
+
+## Step 1: Restrict App Engine Ingress Traffic
+Prevent users from bypassing the Load Balancer to access the raw `appspot.com` URL directly.
+1. Open the GCP Console and search for **App Engine**.
+2. In the left navigation menu, click **Settings**.
+3. Under the **Ingress settings** tab, click **Edit**.
+4. Select **Internal and Cloud Load Balancing** from the dropdown.
+5. Click **Save**.
+
+---
+
+## Step 2: Reserve a Global Static IP Address
+Reserve a static IP for the Load Balancer to ensure it remains permanent.
+1. In the search bar at the top, type and select **IP addresses** (under VPC network).
+2. Click **Reserve external static IP address** at the top.
+3. Configure the following fields:
+   *   **Name**: `student-app-lb-ip`
+   *   **Network Service Tier**: `Premium`
+   *   **IP Version**: `IPv4`
+   *   **Type**: `Global`
+4. Click **Reserve** at the bottom.
+5. *Note down the reserved IP address (e.g., `34.120.x.x`) shown in the list.*
+
+---
+
+## Step 3: Create a Serverless Network Endpoint Group (NEG)
+Create a group that points the load balancer to your App Engine service.
+1. Search for and select **Network endpoint groups** (under Compute Engine).
+2. Click **Create network endpoint group**.
+3. Configure the following fields:
+   *   **Name**: `student-app-neg`
+   *   **Network endpoint group type**: Select **Serverless network endpoint group (App Engine, Cloud Run, Cloud Functions)**.
+   *   **Region**: Select the region where your App Engine is deployed (e.g., `us-central1`).
+   *   **Serverless type**: Select **App Engine**.
+   *   **Service**: Select **default** (or your specific service name).
+4. Click **Create**.
+
+---
+
+## Step 4: Create the Global HTTPS Load Balancer & SSL Cert
+1. Search for and select **Load balancing** (under Network Services).
+2. Click **Create load balancer** at the top.
+3. Under **Application Load Balancer (HTTP/S)**, click **Start configuration**.
+4. Select **From Internet to my VMs or serverless services** and **Global external Application Load Balancer**. Click **Continue**.
+5. Set the load balancer name to `student-app-lb`.
+6. Click on **Frontend configuration**:
+   *   **Name**: `https-frontend`
+   *   **Protocol**: `HTTPS (includes HTTP/2)`
+   *   **IP version**: `IPv4`
+   *   **IP address**: Select `student-app-lb-ip` (the global static IP you reserved in Step 2).
+   *   **Port**: `443`
+   *   **Certificate**: Click the dropdown and select **Create a new certificate**:
+       *   **Name**: `student-app-cert`
+       *   **Create mode**: Select **Create Google-managed certificate**.
+       *   **Domains**: Type `students.cygdevops.com`.
+       *   Click **Create**.
+   *   **HTTP-to-HTTPS redirect**: Check the **Enable HTTP to HTTPS redirect** checkbox (this automatically handles port 80 redirect).
+   *   Click **Done**.
+7. Click on **Backend configuration**:
+   *   Under **Backend services & backend buckets**, click the dropdown and select **Create a backend service**.
+   *   **Name**: `student-app-backend`
+   *   **Backend type**: Select **Serverless network endpoint group**.
+   *   Under **Backends** > **New backend**:
+       *   Select `student-app-neg` (the Serverless NEG you created in Step 3).
+   *   Click **Create**.
+8. Click **Review and finalize** to verify configurations, then click **Create**.
+
+---
+
+## Step 5: Configure Cloud DNS
+Point your FQDN to the Load Balancer IP.
+1. Search for and select **Cloud DNS** (under Network Services).
+2. Click on the zone name for `cygdevops.com` (e.g., `cygdevops-zone`).
+3. Click **Add standard** (or **Add record set**).
+4. Configure the record:
+   *   **DNS Name**: Type `students` (so it resolves to `students.cygdevops.com.`).
+   *   **Resource Record Type**: Select `A`.
+   *   **TTL**: `5 minutes` (or `300` seconds).
+   *   **IPv4 Address**: Enter the Load Balancer static IP address reserved in Step 2.
+5. Click **Create**.
+
+---
+
+## Step 6: Create GCP Cloud Armor Standard Security Policy
+Protect the app using Pay-As-You-Go rules.
+1. Search for and select **Cloud Armor** (under Network Security).
+2. Click **Create policy** at the top.
+3. Configure the **Configure policy** page:
+   *   **Name**: `student-app-armor-policy`
+   *   **Policy type**: `Security policy`
+   *   **Default rule action**: `Allow`
+4. Under **More options**, click **Add target**:
+   *   **Target**: Select `student-app-backend` (the backend service you created in Step 4).
+   *   Click **Next step**.
+5. Configure the **Add rules** page:
+   *   **Rule 1 (SQL Injection Block)**:
+       *   Click **Add rule**.
+       *   **Action**: `Deny`
+       *   **Deny status**: `403 (Forbidden)`
+       *   **Match**: Select **Enter expression** and paste:
+           ```text
+           evaluatePreconfiguredExpr('sqli-v33-stable')
+           ```
+       *   **Priority**: `9000`
+       *   Click **Done**.
+   *   **Rule 2 (Cross-Site Scripting Block)**:
+       *   Click **Add rule**.
+       *   **Action**: `Deny`
+       *   **Deny status**: `403 (Forbidden)`
+       *   **Match**: Select **Enter expression** and paste:
+           ```text
+           evaluatePreconfiguredExpr('xss-v33-stable')
+           ```
+       *   **Priority**: `9010`
+       *   Click **Done**.
+   *   **Rule 3 (Rate Limiting)**:
+       *   Click **Add rule**.
+       *   **Action**: Select `Rate limit`
+       *   **Rate limit threshold**:
+           *   **Request count**: `100`
+           *   **Interval**: `60` seconds
+       *   **Conform action**: `Allow`
+       *   **Exceed action**: `Deny (429 - Too Many Requests)`
+       *   **Enforce on key**: `IP`
+       *   **Match**: Select **Enter expression** and type `true`.
+       *   **Priority**: `9020`
+       *   Click **Done**.
+6. Click **Next step**, then click **Create policy**.
+
+---
+
+## Verification Steps (Post-Implementation)
+1. **SSL Provisioning Check**:
+   Go to **Network Services** > **Load balancing** > Click on your certificate. It will show `PROVISIONING` status. Once DNS propagation is complete (usually 15-30 minutes), the status will change to `ACTIVE`.
+2. **Endpoint Access Check**:
+   *   Open browser and navigate to `http://students.cygdevops.com`. Verify it redirects you automatically to `https://students.cygdevops.com`.
+   *   Verify the student registration UI works.
+3. **App Engine direct link block**:
+   *   Open your browser and navigate to the default App Engine URL (e.g. `https://<YOUR_PROJECT_ID>.appspot.com`). It must display an HTTP `403 Forbidden` error page.
+4. **Cloud Armor WAF Check**:
+   *   Open your terminal and attempt to send a simulated SQL injection request:
+       ```bash
+       curl -i "https://students.cygdevops.com/students?id=1%20OR%201=1"
+       ```
+       Verify the server response contains `HTTP/2 403` (blocked by Cloud Armor).
