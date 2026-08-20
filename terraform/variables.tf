@@ -27,3 +27,9 @@ variable "slack_webhook_url" {
   description = "Slack Webhook URL for notifications"
   default     = "https://hooks.slack.com/services/mock/devops/deployments"
 }
+
+variable "github_repository" {
+  type        = string
+  description = "GitHub Repository in owner/repo format for Workload Identity Federation"
+  default     = "amitpawarcbg/Google-ADK-Multiagent-flow"
+}
