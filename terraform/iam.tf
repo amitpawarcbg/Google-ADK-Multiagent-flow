@@ -57,11 +57,12 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
   display_name                       = "GitHub Provider"
   project                            = var.project_id
 
+  attribute_condition = "assertion.repository == \"${var.github_repository}\""
+
   attribute_mapping = {
     "google.subject"       = "assertion.sub"
     "attribute.actor"      = "assertion.actor"
     "attribute.repository" = "assertion.repository"
-    "attribute.owner"      = "assertion.repository_owner"
   }
 
   oidc {
