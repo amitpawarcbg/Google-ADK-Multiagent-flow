@@ -20,12 +20,13 @@ provider "google" {
 # 1. Enable Necessary GCP APIs
 resource "google_project_service" "gcp_services" {
   for_each = toset([
-    "aiplatform.googleapis.com",       # Vertex AI API for gemini-2.5-flash
-    "run.googleapis.com",              # Google Cloud Run API
-    "artifactregistry.googleapis.com", # Google Artifact Registry API
-    "iam.googleapis.com",              # Identity and Access Management API
-    "storage.googleapis.com",          # Google Cloud Storage API
-    "cloudbuild.googleapis.com"        # Cloud Build API
+    "aiplatform.googleapis.com",           # Vertex AI API for gemini-2.5-flash
+    "run.googleapis.com",                  # Google Cloud Run API
+    "artifactregistry.googleapis.com",     # Google Artifact Registry API
+    "iam.googleapis.com",                  # Identity and Access Management API
+    "storage.googleapis.com",              # Google Cloud Storage API
+    "cloudbuild.googleapis.com",            # Cloud Build API
+    "cloudresourcemanager.googleapis.com" # Cloud Resource Manager API for IAM policy management
   ])
 
   project                    = var.project_id
