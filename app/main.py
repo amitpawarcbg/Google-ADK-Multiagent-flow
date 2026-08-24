@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="4.18.0"
+    version="4.19.0"
 )
 
 # In-memory student storage
@@ -89,13 +89,13 @@ def home():
         <title>Cybage DevOps - Student Registration Portal</title>
         <style>
             :root {
-                --primary: #d32f2f;
-                --primary-hover: #b71c1c;
-                --bg: #1a0505;
-                --card-bg: #2b0a0a;
-                --text: #ffcdd2;
-                --text-muted: #ef9a9a;
-                --accent: #ff5252;
+                --primary: #2e7d32;
+                --primary-hover: #1b5e20;
+                --bg: #051a0b;
+                --card-bg: #0a2b14;
+                --text: #c8e6c9;
+                --text-muted: #a5d6a7;
+                --accent: #4caf50;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
