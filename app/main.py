@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 app = FastAPI(
     title="Student Registration Web App",
     description="Simple Python Student Registration application for CI/CD Cloud Run deployment demonstration.",
-    version="4.23.0"
+    version="4.24.0"
 )
 
 # In-memory student storage
@@ -86,13 +86,13 @@ def home():
         <title>Cybage DevOps - Student Registration Portal</title>
         <style>
             :root {
-                --primary: #8d6e63;
-                --primary-hover: #6d4c41;
-                --bg: #1c100b;
-                --card-bg: #2c1b14;
-                --text: #d7ccc8;
-                --text-muted: #bcaaa4;
-                --accent: #a1887f;
+                --primary: #4caf50;
+                --primary-hover: #388e3c;
+                --bg: #e8f5e9;
+                --card-bg: #ffffff;
+                --text: #1b5e20;
+                --text-muted: #2e7d32;
+                --accent: #2e7d32;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -110,19 +110,19 @@ def home():
                 background: var(--card-bg);
                 padding: 30px;
                 border-radius: 12px;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-                border: 1px solid #4e342e;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+                border: 1px solid #c8e6c9;
             }
             h1 { color: var(--accent); font-size: 1.8rem; margin-top: 0; }
             p { color: var(--text-muted); }
-            label { display: block; margin: 12px 0 6px; font-weight: 600; color: #d7ccc8; }
+            label { display: block; margin: 12px 0 6px; font-weight: 600; color: #1b5e20; }
             input, select {
                 width: 100%;
                 padding: 10px;
                 border-radius: 6px;
-                border: 1px solid #4e342e;
-                background: #3e2723;
-                color: #efebe9;
+                border: 1px solid #c8e6c9;
+                background: #f1f8e9;
+                color: #1b5e20;
                 box-sizing: border-box;
             }
             button {
@@ -140,7 +140,7 @@ def home():
             button:hover { background: var(--primary-hover); }
             .student-list { margin-top: 30px; }
             .student-item {
-                background: #3e2723;
+                background: #f1f8e9;
                 padding: 12px;
                 border-radius: 6px;
                 margin-bottom: 8px;
