@@ -86,13 +86,13 @@ def home():
         <title>Cybage DevOps - Student Registration Portal</title>
         <style>
             :root {
-                --primary: #4caf50;
-                --primary-hover: #388e3c;
-                --bg: #e8f5e9;
-                --card-bg: #ffffff;
-                --text: #1b5e20;
-                --text-muted: #2e7d32;
-                --accent: #66bb6a;
+                --primary: #8D6E63;
+                --primary-hover: #6D4C41;
+                --bg: #2B1D16;
+                --card-bg: #4E342E;
+                --text: #EFEBE9;
+                --text-muted: #D7CCC8;
+                --accent: #A1887F;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -110,19 +110,19 @@ def home():
                 background: var(--card-bg);
                 padding: 30px;
                 border-radius: 12px;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-                border: 1px solid #a5d6a7;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                border: 1px solid #6D4C41;
             }
             h1 { color: var(--text); font-size: 1.8rem; margin-top: 0; }
             p { color: var(--text-muted); }
-            label { display: block; margin: 12px 0 6px; font-weight: 600; color: #1b5e20; }
+            label { display: block; margin: 12px 0 6px; font-weight: 600; color: #EFEBE9; }
             input, select {
                 width: 100%;
                 padding: 10px;
                 border-radius: 6px;
-                border: 1px solid #a5d6a7;
-                background: #f1f8e9;
-                color: #1b5e20;
+                border: 1px solid #6D4C41;
+                background: #3E2723;
+                color: #EFEBE9;
                 box-sizing: border-box;
             }
             button {
@@ -140,7 +140,7 @@ def home():
             button:hover { background: var(--primary-hover); }
             .student-list { margin-top: 30px; }
             .student-item {
-                background: #f1f8e9;
+                background: #5D4037;
                 padding: 12px;
                 border-radius: 6px;
                 margin-bottom: 8px;
@@ -207,14 +207,14 @@ def home():
                 const data = await res.json();
                 const listEl = document.getElementById('list');
                 if(data.length === 0) {
-                    listEl.innerHTML = '<p style="color: #388e3c;">No students registered yet.</p>';
+                    listEl.innerHTML = '<p style="color: #D7CCC8;">No students registered yet.</p>';
                     return;
                 }
                 listEl.innerHTML = data.map(s => `
                     <div class="student-item">
                         <div>
                             <strong>${s.name}</strong> (${s.course})<br>
-                            <small style="color:#388e3c;">Roll No: ${s.roll_no} | Phone: ${s.contact_no} | Gender: ${s.gender} | City: ${s.city}, ${s.country} | Pin: ${s.pincode} | Email: ${s.email} | ID: ${s.id}</small>
+                            <small style="color:#D7CCC8;">Roll No: ${s.roll_no} | Phone: ${s.contact_no} | Gender: ${s.gender} | City: ${s.city}, ${s.country} | Pin: ${s.pincode} | Email: ${s.email} | ID: ${s.id}</small>
                         </div>
                     </div>
                 `).join('');
